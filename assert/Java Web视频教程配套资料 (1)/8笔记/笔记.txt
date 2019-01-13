@@ -1,0 +1,110 @@
+1.回顾纯手工方法创建第一个Servlet
+步骤：
+编写一个类，继承HttpServlet
+重写doGet()、doPost()方法
+编写web.xml 中的servlet映射关系
+
+2.借助于Eclipse快速生成Servlet
+直接新建Servlet即可！（继承、重写、web.xml  可以借助Eclipse自动生成）
+
+Servlet3.0，与Servlet2.5的区别：
+Servlet3.0不需要在web.xml中配置，但 需要在 Servlet类的定义处之上编写 注解@WebServlet("url-pattern的值") 
+匹配流程：  请求地址 与@WebServlet中的值 进行匹配，如果匹配成功 ，则说明 请求的就是该注解所对应的类
+
+3. 
+项目根目录：WebContent、src（所有的构建路径）
+例如：
+WebContent中有一个文件index.jsp
+src中有一个Servlet.java  
+
+如果: index.jsp中请求 <a href="abc">...</a> ，则 寻找范围：既会在src根目录中找  也会在WebContent根目录中找
+
+如果：index.jsp中请求<a href="a/abc"></a>，寻找范围：先在src或WebContent中找a目录，然后再在a目录中找abc
+
+web.xml中的 /:代表项目根路径
+http://localhost:8888/Servlet25Project/
+jsp中的/: 服务器根路径
+http://localhost:8888/
+
+构建路径、WebContent:根目录
+
+
+4.Servlet生命周期：5个阶段 
+加载
+初始化： init()  ，该方法会在 Servlet被加载并实例化的以后 执行
+服务  ：service() ->doGet()  doPost
+销毁  ：destroy()，  Servlet被系统回收时执行
+卸载
+
+
+init():
+	a.默认第一次访问 Servlet时会被执行 （只执行这一次）
+	b.可以修改为 Tomcat启动时自动执行
+		i.Servlet2.5：  web.xml
+			  <servlet>
+				...
+  				 <load-on-startup>1</load-on-startup>
+    			</servlet>
+			其中的“1”代表第一个。
+		ii.Servlet3.0
+			@WebServlet( value="/WelcomeServlet" ,loadOnStartup=1  )
+
+
+service() ->doGet()  doPost ：调用几次，则执行几次
+destroy()：关闭tomcat服务时，执行一次。
+
+
+
+
+5 Servlet API ： 由两个软件包组成： 对应于HTTP协议的软件包、对应于除了HTTP协议以外的其他软件包
+即Servlet  API可以适用于 任何 通信协议。 
+我们学习的Servlet,是位于javax.servlet.http包中的类和接口，是基础HTTP协议。
+
+6.Servlet继承关系
+
+ServletConfig:接口 
+ServletContext getServletContext():获取Servlet上下文对象   application
+String  getInitParameter(String name):在当前Servlet范围内，获取名为name的参数值（初始化参数）
+
+
+
+a.ServletContext中的常见方法(application)：
+getContextPath():相对路径
+getRealPath()：绝对路径
+setAttribute() 、getAttribute()
+--->
+String getInitParameter(String name);在当前Web容器范围内，获取名为name的参数值（初始化参数）
+
+
+
+Servlet3.0方式 给当前Servlet设置初始值：
+@WebServlet( .... , initParams= {@WebInitParam(name="serveltparaname30",value="servletparavalue30")   }   )
+注意，此注解只 隶属于某一个具体的Servlet ，因此无法为 整个web容器设置初始化参数 （如果要通过3.0方式设置 web容器的初始化参数，仍然需要在web.xml中设置）
+
+
+
+HttpServletRequest中的方法：(同request)，例如setAttrite()、getCookies()、getMethod()
+HttpServletResponse中的方法：同response
+
+
+
+Servlet使用层面：
+
+Eclipse中在src创建一个Servlet，然后重写doGet()  doPost()就可以  （doGet() doPost()只需要编写一个）。
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

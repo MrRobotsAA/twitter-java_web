@@ -1,0 +1,40 @@
+1.上传文件
+a.引入2个jar
+   apache: commons-fileupload.jar组件
+	commons-fileupload.jar依赖 commons-io.jar
+
+b.
+代码：
+前台jsp：
+	<input type="file"  name="spicture"/>
+	表单提交方式必须为post
+	在表单中必须增加一个属性 entype="multipart/form-data"
+
+后台servlet：
+	
+
+注意的问题：
+	上传的目录  upload ：
+	1.如果修改代码，则在tomcat重新启动时 会被删除
+		原因：当修改代码的时候,tomcat会重新编译一份class 并且重新部署（重新创建各种目录）
+	
+	2.如果不修改代码，则不会删除
+		原因： 没有修改代码，class仍然是之前的class
+
+因此，为了防止 上传目录丢失： a.虚拟路径	b.直接更换上传目录 到非tomcat目录
+
+
+限制上传：
+	类型、
+	大小
+	注意 对文件的限制条件 写再parseRequest之前
+
+
+2.下载：不需要依赖任何jar	
+	a.请求（地址a  form），请求Servlet	
+	b.Servlet通过文件的地址  将文件转为输入流 读到Servlet中
+	c.通过输出流 将 刚才已经转为输入流的文件  输出给用户
+注意：下载文件 需要设置2个 响应头：
+response.addHeader("content-Type","application/octet-stream" );//MIME类型:二进制文件（任意文件）
+response.addHeader("content-Disposition","attachement;filename="+fileName );//fileName包含了文件后缀：abc.txt
+		

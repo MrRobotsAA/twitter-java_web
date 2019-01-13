@@ -1,0 +1,55 @@
+0.注册 登陆
+功能演示 js细节效果
+
+1.数据库表设置架构，外键设置，默认值设置 视图
+
+2.
+md5非对称加密
+3.数据库 工厂模式 反射
+//推荐算法用 DBUtil.java 
+4.数据库防注入攻击
+
+
+5.注册界面xml对象 显示
+selfdetail.jsp checkaite 修改资料 动态判断输入框
+浏览器接口对象 XMLHttpRequest ajax的实现原理
+
+
+6.头像上传算法 base64界面  默认头像  //图像裁剪控件cropbox
+user.do?method=xiugaitouxiang
+user.servlet toChangeLogo   everything 查找 
+
+注册时 signup
+
+7.用户推荐算法
+刷新推荐列表 user.servlet toShuaXinTuiJian
+userinfo.dao  selTuiJian
+
+8.ajax举例 说明
+json序列化反序列化
+
+
+9.会话最后消息获取算法
+MessageServlet.toGetLieBiao
+
+10.
+普通页面逻辑
+消息界面：
+定时刷新最后消息列表
+user变量和uid变量
+先选择朋友创建朋友会话
+主要有最后消息列表
+以msg变量为中介，然后选中某个朋友时，进行请求，更新msg变量
+查询消息时 获取当前最后消息id，然后时刻查询晚于此消息的
+http://localhost:8080/mytwitter/message.do?method=liebiao
+http://localhost:8080/mytwitter/message.do?method=shuaxin&uid=2&mid=undefined
+
+主界面:
+检查是否有新消息
+http://localhost:8080/mytwitter/message.do?method=hasnew  小圆点
+检查是否被顶
+http://localhost:8080/mytwitter/user.do?method=catsession
+
+11.同ip访问限制
+当前用户每秒发送toCatSession请求检测 发现会话注销后发送twitter.do?m=1
+另一用户登录时进行核对用户状态并完成重复ip检测	

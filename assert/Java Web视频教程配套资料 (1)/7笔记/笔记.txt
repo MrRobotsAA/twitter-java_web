@@ -1,0 +1,243 @@
+1.jdbc总结（模板、八股文）：
+
+try{
+a.导入驱动包、加载具体驱动类Class.forName("具体驱动类");
+b.与数据库建立连接connection = DriverManager.getConnection(...);
+c.通过connection，获取操作数据库的对象（Statement\preparedStatement\callablestatement）
+stmt = connection.createStatement();
+d.(查询)处理结果集rs = pstmt.executeQuery()
+while(rs.next()){ rs.getXxx(..) ;}
+}catch(ClassNotFoundException e  )
+{ ...}
+catch(SQLException e)
+{...
+}
+catch(Exception e)
+{...
+}
+finally
+{
+	//打开顺序，与关闭顺序相反
+	if(rs!=null)rs.close()
+	if(stmt!=null) stmt.close();
+	if(connection!=null)connection.close();
+}
+
+--jdbc中，除了Class.forName() 抛出ClassNotFoundException，其余方法全部抛SQLException
+
+
+2.CallableStatement:调用 存储过程、存储函数
+connection.prepareCall(参数：存储过程或存储函数名)
+参数格式：
+存储过程（无返回值return，用out参数替代）：
+	{ call  存储过程名(参数列表) }
+存储函数（有返回值return）：
+	{ ? = call  存储函数名(参数列表) }
+
+
+
+create or replace procedure addTwoNum ( num1  in number,num2  in number,result out number )  -- 1 + 2 ->3
+as
+begin
+	result := num1+num2 ;
+end ;
+/
+
+
+强调：
+如果通过sqlplus 访问数据库，只需要开启：OracleServiceSID
+通过其他程序访问数据（sqldevelop、navicate、JDBC），需要开启：OracleServiceSID、XxxListener
+
+
+JDBC调用存储过程的步骤：
+a.产生 调用存储过程的对象（CallableStatement） cstmt = 	connection.prepareCall(   "..." ) ;
+b.通过setXxx()处理 输出参数值 cstmt.setInt(1, 30);
+c.通过 registerOutParameter(...)处理输出参数类型
+d.cstmt.execute()执行
+e.接受 输出值（返回值）getXxx()
+
+
+调存储函数：
+create or replace function addTwoNumfunction ( num1  in number,num2  in number)  -- 1 + 2 
+return number
+as
+	result number ;	
+begin
+	result := num1+num2 ;
+	return result ;
+end ;
+/
+JDBC调用存储函数：与调存储过程的区别：
+在调用时，注意参数："{? =  call addTwoNumfunction	(?,?) }"
+
+
+
+
+3.处理CLOB/BLOB类型
+处理稍大型数据：
+	
+a.存储路径	E:\JDK_API_zh_CN.CHM
+	通过JDBC存储文件路径，然后 根据IO操作处理
+	例如：JDBC将 E:\JDK_API_zh_CN.CHM 文件 以字符串形式“E:\JDK_API_zh_CN.CHM”存储到数据库中
+		获取：1.获取该路径“E:\JDK_API_zh_CN.CHM”  2.IO	
+
+b.
+	CLOB：大文本数据 （小说->数据）
+	BLOB：二进制
+
+
+clob:大文本数据   字符流 Reader Writer
+存
+a.先通过pstmt 的? 代替小说内容 （占位符）
+b.再通过pstmt.setCharacterStream(2, reader,  (int)file.length());  将上一步的？替换为 小说流， 注意第三个参数需要是 Int类型
+
+取：
+a.通过Reader reader = rs.getCharacterStream("NOVEL") ; 将cloc类型的数据  保存到Reader对象中
+b. 将Reader通过Writer输出即可。
+
+blob:二进制  字节流 InputStream OutputStream
+与CLOB步骤基本一致，区别：setBinaryStream(...)  getBinaryStream(...)   
+
+
+4.JSP访问数据库
+
+JSP就是在html中嵌套的java代码，因此 java代码可以写在jsp中（<%  ... %>）
+
+导包操作：java项目 ：1 Jar复制到工程中 2.右键该Jar :build path ->add to build Path
+	  Web项目：jar复制到WEB-INF/lib
+
+核心：就是将 java中的JDBC代码，复制到 JSP中的<% ... %>
+
+
+注意：如果jsp出现错误：The import Xxx cannot be resolved
+	
+尝试解决步骤：
+	a.(可能是Jdk、tomcat版本问题) 右键项目->build path，将其中 报错的 libary或Lib 删除后 重新导入
+	b.清空各种缓存：右键项目->Clean tomcat... clean  （Project -clean或者 进tomcat目录 删除里面work的子目录）
+	c.删除之前的tomcat，重新解压缩、配置tomcat，重启计算机
+	d.如果类之前没有包，则将该类加入包中
+	
+
+5.JavaBean
+刚才我们将 jsp中 登录操作的代码  转移到了LoginDao.java；其中LoginDao类 就称之为JavaBean。
+JavaBean的作用：a.减轻的jsp复杂度  b.提高代码复用（以后任何地方的 登录操作，都可以通过调用LoginDao实现）
+
+JavaBean（就是一个Java类）的定义：满足一下2点 ，就可以称为JavaBean
+	a.public 修饰的类  ,public 无参构造
+	b.所有属性(如果有) 都是private，并且提供set/get   (如果boolean 则get 可以替换成is)
+
+使用层面，Java分为2大类：
+a.封装业务逻辑的JavaBean (LoginDao.java封装了登录逻辑)			逻辑
+	可以将jsp中的JDBC代码，封装到Login.java类中 （Login.java）
+
+b.封装数据的JavaBean   （实体类，Student.java  Person.java  ）		数据 
+	对应于数据库中的一张表
+	Login login = new Login(uname,upwd) ;//即用Login对象 封装了2个数据（用户名 和密码）
+
+封装数据的JavaBean 对应于数据库中的一张表   (Login(name,pwd))
+封装业务逻辑的JavaBean 用于操作 一个封装数据的JavaBean  
+
+可以发现，JavaBean可以简化 代码(jsp->jsp+java)、提供代码复用(LoginDao.java)
+
+
+
+public  void sleep(String name,String place, int time)
+{
+
+}
+
+public  void sleep(Person per)
+{
+	per.getName()
+	per.getPlace()
+	...
+}
+
+
+
+MVC设计模式：
+M：Model	，模型  ：一个功能。用JavaBean实现。
+
+V:View，视图： 用于展示、以及与用户交互。使用html  js  css jsp jquery等前端技术实现
+
+C:Controller，控制器 ：接受请求，将请求跳转到模型进行处理；模型处理完毕后，再将处理的结果
+			返回给 请求处 。 可以用jsp实现，  但是一般建议使用 Servlet实现控制器。
+
+Jsp->Java(Servlet)->JSP
+
+
+Servlet：
+Java类必须符合一定的 规范：
+	a.必须继承  javax.servlet.http.HttpServlet
+	b.重写其中的 doGet()或doPost()方法
+
+ doGet()： 接受 并处 所有get提交方式的请求
+ doPost()：接受 并处 所有post提交方式的请求
+
+
+Servlet要想使用，必须配置
+Serlvet2.5：web.xml
+Servle3.0： @WebServlet
+
+
+Serlvet2.5：web.xml:
+
+项目的根目录：WebContent 、src
+
+<a href="WelcomeServlet">所在的jsp是在 WebContent目录中，因此 发出的请求WelcomeServlet  是去请求项目的根目录。
+
+Servlet流程：
+请求 -><url-pattern> -> 根据<servlet-mapping>中的<servlet-name> 去匹配  <servlet> 中的<servlet-name>，然后寻找到<servlet-class>，求中将请求交由该<servlet-class>执行。
+
+
+
+2个/:
+jsp:/  localhost:8888
+web.xml: /   http://localhost:8888/项目名/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

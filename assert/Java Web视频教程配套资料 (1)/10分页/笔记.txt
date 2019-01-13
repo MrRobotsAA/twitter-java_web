@@ -1,0 +1,194 @@
+三层优化
+1.加入接口
+	建议面向接口开发：先接口-再实现类
+	--service、dao加入接口
+	--接口与实现类的命名规范
+		接口：interface，	起名   I实体类Service		IStudentService
+						IStudentDao	
+		实现类：implements	起名   实体类ServiceImpl		StudentServiceImpl
+						StudentDaoImpl
+		接口：	I实体类层所在包名	IStudentService、IStudentDao	
+			接口所在的包：  xxx.service		xx.dao
+
+		实现类：	 实体类层所在包名Impl	StudentServiceImpl、StudentDaoImpl
+			实现类所在的包：xxx.service.impl		xx.dao.impl
+
+	以后使用接口/实现类时，推荐写法：
+	接口 x = new 实现类();
+	IStudentDao studentDao = new StudentDaoImpl();
+
+2.DBUtil 通用的数据库帮助类，可以简化Dao层的代码量
+
+帮助类 一般建议写在  xxx.util包
+
+
+
+
+A
+{
+
+	a(){
+		B.connection
+	}
+}
+
+B
+{
+	static Connection connection =..
+	b{
+		
+	}
+}
+
+方法重构：  将多个方法 的共同代码 提炼出来，单独写在一个方法中，然后引入该方法即可
+a()
+{
+	..
+	c();
+	..
+	
+}
+
+b()
+{
+	..
+	c();
+	..
+}
+
+
+
+c()
+{
+		[..
+	..	
+	...		
+	..]
+}
+
+
+Web调试：
+与java代码的调试 区别：启动方式不同
+
+
+
+
+
+
+
+
+
+index.jsp ->index_jsp.java ->index_jsp.class 
+
+jsp->java->class
+jsp翻译成的Java 以及编译后的class文件 存在于tomcat中的work目录中
+
+
+
+
+10000
+
+分页：5变量（属性）
+
+1.数据总数 （select count(*) from xxx ，          查数据库）
+2.页面大小（页面容量，每页显示的数据条数）	（用户自定义）
+3.总页数  					 （自动计算）
+	800:10= 80页
+	总页数= 数据总数 /页面大小
+
+	802:10=  800/10 +1 ；
+	总页数= 数据总数 /页面大小 + 1;
+
+	-->通式
+	总页数= 数据总数 % 页面大小==0 ?数据总数 /页面大小:数据总数 /页面大小 + 1;
+
+注意：自动计算的时机：当 数据总数 和 页面大小都被赋值以后，自动计算总页数。
+
+
+4.当前页码					（用户自定义）
+
+5.实体类对象集合（当前页的数据集合）：依赖于数据库	 (查数据库)
+	假设： 每页显示10条（页面大小=10）
+
+select * from student where id>=起始 and id<=终止;
+
+
+页数  		起止			起止等价写法
+1		1-10			(页数-1)*10+1-页数*10
+2		11-20
+3		21-30
+
+
+某一页的数据 起止：
+
+	(页数-1)*10+1-页数*10
+
+
+
+select * from student where sno>=(页数-1)*10+1 and sno<=页数*10;
+此种分页SQL 严格依赖sno的数据，  一旦sno出现了间隙（裂缝），则无法满足每页10条
+
+->将此SQL 转换： 1.有rownum  2不能有rownum>xx
+转换的核心：  将rownum从伪列 转换为 一个 临时表的 普通列。
+
+select *from 
+(
+	select rownum r,t.*from
+	(select s.* from student s order by sno asc) t   
+ 
+) where r>=(页数-1)*10+1 and r<=页数*10;			
+
+
+优化：
+
+select *from (
+	select rownum r,t.*from
+	(select s.* from student s order by sno asc) t
+	where 	 rownum<=页数*页面大小			
+ 
+) where  r>=(页数-1)*页面大小+1 	;				
+  
+
+
+
+1
+2
+3
+
+6
+7
+8
+9
+
+...
+11
+12
+13
+..
+21
+22
+23
+..
+
+
+
+
+
+	
+
+	
+
+dao和DBUtil的区别：
+dao 是处理特定 类的 数据库操作类：
+DBUtil是通用  数据库操作类
+
+
+
+
+
+
+
+
+
+
+
